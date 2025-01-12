@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         });
         Log.d("TP1", "Création de l'activité");
 
-        ToggleButton buttonStart = (ToggleButton) findViewById(R.id.buttonStart);
+        ToggleButton buttonStart = findViewById(R.id.buttonStart);
         buttonStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
             TextView view2 = (TextView) findViewById(R.id.textView2);
             String newText;
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             view2.setText(newText);
         });
 
-        Switch startAtBoot = (Switch) findViewById(R.id.startAtBoot);
+        Switch startAtBoot = findViewById(R.id.startAtBoot);
         startAtBoot.setOnCheckedChangeListener((buttonView,isChecked)->{
             Log.d("TP1", "start at boot changed to " + isChecked);
             SharedPreferences prefs = getSharedPreferences("settingsTP1", MODE_PRIVATE);
@@ -72,20 +72,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateView(List<Measurement> measurements) {
-        if (measurements != null && !measurements.isEmpty()) {
-            Measurement mostRecent = measurements.get(0);
-            for (Measurement measurement : measurements) {
-                if (measurement.timestamp > mostRecent.timestamp) {
-                    mostRecent = measurement;
-                }
-            }
-            TextView lastResultTextView = findViewById(R.id.textView4);
-            lastResultTextView.setText(String.format("%s", mostRecent.value));
-            TextView timeLastResultTextView = findViewById(R.id.textView6);
-            DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
-            String dateString = formatter.format(new Date(mostRecent.timestamp));
-            timeLastResultTextView.setText(dateString);
+        if (measurements == null || measurements.isEmpty())
+            return;
 
+        Measurement mostRecent = measurements.get(0);
+        for (Measurement measurement : measurements) {
+            if (measurement.timestamp > mostRecent.timestamp) {
+                mostRecent = measurement;
+            }
         }
+        TextView lastResultTextView = findViewById(R.id.textView4);
+        lastResultTextView.setText(String.format("%s", mostRecent.value));
+        TextView timeLastResultTextView = findViewById(R.id.textView6);
+        DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+        String dateString = formatter.format(new Date(mostRecent.timestamp));
+        timeLastResultTextView.setText(dateString);
+
+        StringBuilder measurementsString = new StringBuilder();
+        for (Measurement measurement: measurements) {
+            measurementsString.append(measurement.toString()).append('\n');
+        }
+
+        TextView measurementsView = findViewById(R.id.textView7);
+        measurementsView.setText(measurementsString.toString());
+
     }
 }
