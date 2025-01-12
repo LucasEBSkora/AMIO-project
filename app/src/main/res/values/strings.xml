@@ -8,4 +8,6 @@
     <string name="stopped">Stopped!</string>
     <string name="startAtBoot">Start service at boot?</string>
     <string name="serverURL">http://iotlab.telecomnancy.eu:8080/iotlab/rest/data/1/light1/last</string>
+    <string name="lastMeasurement">Last Measurement:</string>
+    <string name="timeLastMeasurement">Time of Last Measurement</string>
 </resources>

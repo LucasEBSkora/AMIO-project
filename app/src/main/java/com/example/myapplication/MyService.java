@@ -13,11 +13,9 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 
 public class MyService extends Service {
     Timer timer;
@@ -61,6 +59,7 @@ public class MyService extends Service {
             return;
         }
         HttpURLConnection connection;
+        List<Measurement> measurements;
         try {
             connection = (HttpURLConnection) url.openConnection();
             int responseCode = connection.getResponseCode();
@@ -69,22 +68,16 @@ public class MyService extends Service {
                 return;
             }
             log(Integer.toString(responseCode));
-            StringBuffer sb = new StringBuffer();
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String inputLine;
 
-            while ((inputLine = in.readLine()) != null) {
-                sb.append(inputLine);
-            }
-            in.close();
-
-            log(sb.toString());
+            JSONParser parser = new JSONParser(connection.getInputStream());
+            measurements = parser.getMeasurements();
 
         } catch (IOException e) {
             log("IO Exception: " + e.getMessage());
+            return;
         }
 
-
+        DataManager.getInstance().updateData(measurements);
     }
 
     private void log(String msg) {

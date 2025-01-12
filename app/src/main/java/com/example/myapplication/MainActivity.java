@@ -3,6 +3,8 @@ package com.example.myapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.icu.text.DateFormat;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Switch;
@@ -15,8 +17,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import org.w3c.dom.Text;
+
+import java.util.Date;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
+    boolean alive;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,10 +61,31 @@ public class MainActivity extends AppCompatActivity {
             edit.apply();
         });
 
+        DataManager.getInstance().addListener(this, this::updateView);
     }
+
 
     @Override
     protected void onDestroy() {
+        DataManager.getInstance().removeListener(this);
         super.onDestroy();
+    }
+
+    public void updateView(List<Measurement> measurements) {
+        if (measurements != null && !measurements.isEmpty()) {
+            Measurement mostRecent = measurements.get(0);
+            for (Measurement measurement : measurements) {
+                if (measurement.timestamp > mostRecent.timestamp) {
+                    mostRecent = measurement;
+                }
+            }
+            TextView lastResultTextView = findViewById(R.id.textView4);
+            lastResultTextView.setText(String.format("%s", mostRecent.value));
+            TextView timeLastResultTextView = findViewById(R.id.textView6);
+            DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+            String dateString = formatter.format(new Date(mostRecent.timestamp));
+            timeLastResultTextView.setText(dateString);
+
+        }
     }
 }

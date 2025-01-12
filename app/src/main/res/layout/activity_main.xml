@@ -21,7 +21,7 @@
             android:layout_weight="1"
             android:text="@string/serviceStatus"
             android:textAlignment="viewStart"
-            android:textSize="30sp" />
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/textView2"
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/defaultStatus"
-            android:textSize="30sp" />
+            android:textSize="20sp" />
     </TableRow>
 
     <TableRow
@@ -42,8 +42,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/lastResult"
-            android:textSize="30sp" />
+            android:text="@string/lastMeasurement"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/textView4"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/defaultStatus"
-            android:textSize="30sp" />
+            android:textSize="20sp" />
     </TableRow>
 
     <TableRow
@@ -64,8 +64,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/lastAlert"
-            android:textSize="30sp" />
+            android:text="@string/timeLastMeasurement"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/textView6"
@@ -73,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/defaultStatus"
-            android:textSize="30sp" />
+            android:textSize="20sp" />
     </TableRow>
 
     <TableRow
@@ -94,12 +94,6 @@
                 android:layout_weight="1"
                 android:text="ToggleButton" />
 
-            <ToggleButton
-                android:id="@+id/toggleButton4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ToggleButton" />
         </LinearLayout>
 
     </TableRow>
