@@ -7,15 +7,14 @@ import java.util.function.Consumer;
 import android.os.Handler;
 
 public class DataManager {
-    private Map<Object, Consumer<List<Measurement>>> callbacks;
-    Handler handler;
-    List<Measurement> measurements;
+    final private Map<Object, Consumer<SlidingWindow>> callbacks;
+    SlidingWindow measurementsWindow;
     static private DataManager instance = null;
 
 
     private DataManager() {
         callbacks = new HashMap<>();
-        handler = new Handler();
+        measurementsWindow = new SlidingWindow(2);
     }
 
     static DataManager getInstance() {
@@ -25,7 +24,7 @@ public class DataManager {
         return instance;
     }
 
-    public void addListener(Object key, Consumer<List<Measurement>> callback) {
+    public void addListener(Object key, Consumer<SlidingWindow> callback) {
         callbacks.put(key, callback);
     }
 
@@ -34,14 +33,10 @@ public class DataManager {
     }
 
     public synchronized void updateData(List<Measurement> measurements) {
-        this.measurements = measurements;
-        for (Consumer<List<Measurement>> callback : callbacks.values()) {
-            handler.post(()->{callback.accept(measurements);});
+        measurementsWindow.addMeasurements(measurements);
+        if (!measurementsWindow.windowFull()) return;
+        for (Consumer<SlidingWindow> callback : callbacks.values()) {
+            callback.accept(measurementsWindow);
         }
     }
-
-    public List<Measurement> getMeasurements() {
-        return  measurements;
-    }
-
 }

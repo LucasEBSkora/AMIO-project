@@ -1,6 +1,6 @@
 package com.example.myapplication;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.icu.text.DateFormat;
@@ -12,19 +12,27 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import org.w3c.dom.Text;
-
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+enum LampState {ON, OFF, UNKNOWN}
 
 public class MainActivity extends AppCompatActivity {
+    private Map<String, LampState> motesOn;
 
-    boolean alive;
+    public MainActivity() {
+        motesOn = new HashMap<>();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,30 +79,65 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void updateView(List<Measurement> measurements) {
-        if (measurements == null || measurements.isEmpty())
+    public void updateView(@NonNull SlidingWindow measurements) {
+        Map<String, Measurement> firstMeasurements = measurements.getMostRecent();
+        if (firstMeasurements == null || firstMeasurements.isEmpty())
             return;
 
-        Measurement mostRecent = measurements.get(0);
-        for (Measurement measurement : measurements) {
-            if (measurement.timestamp > mostRecent.timestamp) {
-                mostRecent = measurement;
+        Optional<Measurement> mostRecentOpt = firstMeasurements.values().stream().reduce((a, b) -> a.timestamp > b.timestamp ? a : b);
+
+        if (mostRecentOpt.isEmpty()) {
+            return;
+        }
+        Measurement mostRecent = mostRecentOpt.get();
+
+        DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+        final String dateString = formatter.format(new Date(mostRecent.timestamp));
+        final String lastResult = String.format("%s", mostRecent.value);
+
+        Map<String, Measurement> oldMeasurements = measurements.get(0);
+        for (String mote : firstMeasurements.keySet()) {
+            motesOn.put(mote, getLampState(oldMeasurements.get(mote), firstMeasurements.get(mote)));
+        }
+
+
+        StringBuilder measurementsStringBuilder = new StringBuilder();
+        for (String mote : motesOn.keySet()) {
+            LampState state = motesOn.get(mote);
+            measurementsStringBuilder.append(mote).append(": ").append(state).append('\n');
+        }
+
+        final String measurementsString = measurementsStringBuilder.toString();
+
+        runOnUiThread(() -> {
+            TextView lastResultTextView = findViewById(R.id.textView4);
+            lastResultTextView.setText(lastResult);
+
+            TextView timeLastResultTextView = findViewById(R.id.textView6);
+            timeLastResultTextView.setText(dateString);
+
+            TextView measurementsView = findViewById(R.id.textView7);
+            measurementsView.setText(measurementsString);
+        });
+
+    }
+
+    @NonNull
+    private LampState getLampState(Measurement old, Measurement measurement) {
+        if (old != null) {
+            final double delta  = measurement.value - old.value;
+            if (delta > 50) {
+                return LampState.ON;
+            } else if (delta < -50) {
+                return LampState.OFF;
+            }
+        } else {
+            if (measurement.value < 100) {
+                return LampState.OFF;
+            } else if (measurement.value > 300) {
+                return LampState.ON;
             }
         }
-        TextView lastResultTextView = findViewById(R.id.textView4);
-        lastResultTextView.setText(String.format("%s", mostRecent.value));
-        TextView timeLastResultTextView = findViewById(R.id.textView6);
-        DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
-        String dateString = formatter.format(new Date(mostRecent.timestamp));
-        timeLastResultTextView.setText(dateString);
-
-        StringBuilder measurementsString = new StringBuilder();
-        for (Measurement measurement: measurements) {
-            measurementsString.append(measurement.toString()).append('\n');
-        }
-
-        TextView measurementsView = findViewById(R.id.textView7);
-        measurementsView.setText(measurementsString.toString());
-
+        return LampState.UNKNOWN;
     }
 }
