@@ -11,10 +11,10 @@ public class MyBootBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         Log.d("Broadcast receiver", "received:" + intent.getAction());
-        SharedPreferences prefs = context.getSharedPreferences("settingsTP1",Context.MODE_PRIVATE);
-        boolean startOnBoot  =prefs.getBoolean("startOnBoot", false);
+        SharedPreferences prefs = context.getSharedPreferences("settingsTP1", Context.MODE_PRIVATE);
+        boolean startOnBoot = prefs.getBoolean("startOnBoot", false);
         Log.d("TP1", "start on boot=" + startOnBoot);
-        if(startOnBoot) {
+        if (startOnBoot) {
             context.startService(new Intent(context, MyService.class));
         }
     }

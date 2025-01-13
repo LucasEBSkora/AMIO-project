@@ -1,6 +1,5 @@
 package com.example.myapplication;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.icu.text.DateFormat;
@@ -20,14 +19,13 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 enum LampState {ON, OFF, UNKNOWN}
 
 public class MainActivity extends AppCompatActivity {
-    private Map<String, LampState> motesOn;
+    private final Map<String, LampState> motesOn;
 
     public MainActivity() {
         motesOn = new HashMap<>();
@@ -48,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         ToggleButton buttonStart = findViewById(R.id.buttonStart);
         buttonStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            TextView view2 = (TextView) findViewById(R.id.textView2);
+            TextView view2 = findViewById(R.id.textView2);
             String newText;
             if (isChecked) {
                 startService(new Intent(getApplicationContext(), MyService.class));
@@ -61,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Switch startAtBoot = findViewById(R.id.startAtBoot);
-        startAtBoot.setOnCheckedChangeListener((buttonView,isChecked)->{
+        startAtBoot.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.d("TP1", "start at boot changed to " + isChecked);
             SharedPreferences prefs = getSharedPreferences("settingsTP1", MODE_PRIVATE);
             SharedPreferences.Editor edit = prefs.edit();
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     @NonNull
     private LampState getLampState(Measurement old, Measurement measurement) {
         if (old != null) {
-            final double delta  = measurement.value - old.value;
+            final double delta = measurement.value - old.value;
             if (delta > 50) {
                 return LampState.ON;
             } else if (delta < -50) {

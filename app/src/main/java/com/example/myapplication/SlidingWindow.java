@@ -1,15 +1,13 @@
 package com.example.myapplication;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SlidingWindow {
-    List<Map<String, Measurement>> lastMeasurements;
     final int windowSize;
+    List<Map<String, Measurement>> lastMeasurements;
 
     public SlidingWindow(int windowSize) {
         this.windowSize = windowSize;
@@ -35,5 +33,8 @@ public class SlidingWindow {
     public Map<String, Measurement> get(int index) {
         return lastMeasurements.get(index);
     }
-    public Map<String, Measurement> getMostRecent() {return lastMeasurements.get(lastMeasurements.size() - 1); }
+
+    public Map<String, Measurement> getMostRecent() {
+        return lastMeasurements.get(lastMeasurements.size() - 1);
+    }
 }

@@ -4,13 +4,14 @@ import androidx.annotation.NonNull;
 
 public class Measurement {
     public long timestamp;
-    public  String label;
-    public  double value;
-    public  String mote;
+    public String label;
+    public double value;
+    public String mote;
 
-    public  Measurement() {
+    public Measurement() {
 
     }
+
     public Measurement(long timestamp, String label, double value, String mote) {
         this.timestamp = timestamp;
         this.label = label;

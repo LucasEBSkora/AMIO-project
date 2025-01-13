@@ -4,12 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import android.os.Handler;
 
 public class DataManager {
+    static private DataManager instance = null;
     final private Map<Object, Consumer<SlidingWindow>> callbacks;
     SlidingWindow measurementsWindow;
-    static private DataManager instance = null;
 
 
     private DataManager() {
