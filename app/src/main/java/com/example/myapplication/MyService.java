@@ -1,7 +1,10 @@
 package com.example.myapplication;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
 import android.os.Handler;
@@ -11,6 +14,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -24,17 +30,13 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
-enum LampState {ON, OFF, UNKNOWN}
-
 public class MyService extends Service {
 
     public static final String NEW_DATA = "com.example.myapplication.myservice.NEW_DATA";
+    final String CHANNEL_ID = "lampStatus";
     Timer timer;
-
     SlidingWindow measurementsWindow;
-
     Handler handler;
-
     Map<String, LampState> motesOn;
 
     @Override
@@ -45,6 +47,18 @@ public class MyService extends Service {
         measurementsWindow = new SlidingWindow(2);
         motesOn = new HashMap<>();
         log("Service Created!");
+
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is not in the Support Library.
+        CharSequence name = getString(R.string.channel_name);
+        String description = getString(R.string.channel_description);
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        channel.setDescription(description);
+        // Register the channel with the system. You can't change the importance
+        // or other notification behaviors after this.
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 
     @Override
@@ -145,20 +159,35 @@ public class MyService extends Service {
 
     @NonNull
     private LampState getLampState(Measurement old, Measurement measurement) {
+        double delta = 0;
         if (old != null) {
-            final double delta = measurement.value - old.value;
-            if (delta > 50) {
-                return LampState.ON;
-            } else if (delta < -50) {
-                return LampState.OFF;
-            }
+            delta = measurement.value - old.value;
+        }
+
+        if (delta > 50) {
+            measurement.state = LampState.ON;
+        } else if (delta < -50) {
+            measurement.state = LampState.OFF;
+        } else if (old != null && old.state != LampState.UNKNOWN) {
+            measurement.state = old.state;
+        } else if (measurement.value < 150) {
+            measurement.state = LampState.OFF;
         } else {
-            if (measurement.value < 100) {
-                return LampState.OFF;
-            } else if (measurement.value > 300) {
-                return LampState.ON;
+            measurement.state = LampState.ON;
+        }
+
+        if (old != null && old.state != measurement.state) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_on : R.drawable.ic_lamp_off)
+                    .setContentTitle("Lamp status changed!")
+                    .setContentText("lamp at " + measurement.mote + " turned " + measurement.state)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                NotificationManagerCompat.from(this).notify(0, builder.build());
             }
         }
-        return LampState.UNKNOWN;
+
+        return measurement.state;
     }
 }
