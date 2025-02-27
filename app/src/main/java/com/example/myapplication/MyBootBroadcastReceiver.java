@@ -17,5 +17,7 @@ public class MyBootBroadcastReceiver extends BroadcastReceiver {
         if (startOnBoot) {
             context.startService(new Intent(context, MyService.class));
         }
+
+
     }
 }

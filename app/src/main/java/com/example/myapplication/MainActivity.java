@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Switch;
@@ -17,6 +18,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Measurement mostRecent = mostRecentOpt.get();
 
+
         DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
         final String dateString = formatter.format(new Date(mostRecent.timestamp));
         final String lastResult = String.format("%s", mostRecent.value);
@@ -138,4 +141,9 @@ public class MainActivity extends AppCompatActivity {
         }
         return LampState.UNKNOWN;
     }
+
+
+
+
+
 }

@@ -33,6 +33,10 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".EmailBroadcastReceiver" android:enabled="true" android:exported="true" />
+
+
     </application>
 
 </manifest>
