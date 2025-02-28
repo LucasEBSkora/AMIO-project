@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -178,11 +177,9 @@ public class MyService extends Service {
         final String lastResult = String.format("%s", mostRecent.value);
 
         Map<String, Measurement> oldMeasurements = measurementsWindow.get(0);
-        Random rand = new Random();
         for (String mote : firstMeasurements.keySet()) {
             Measurement newMeasurement = firstMeasurements.get(mote);
             if (newMeasurement == null) continue;
-            newMeasurement.value = rand.nextFloat() * 400;
             calculateLampState(oldMeasurements.get(mote), newMeasurement);
             motesOn.put(mote, newMeasurement);
         }
@@ -230,11 +227,12 @@ public class MyService extends Service {
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 NotificationManagerCompat.from(this).notify(notificationIndex++, builder.build());
             }
-
-            if (measurement.state == LampState.ON && isValidTime()) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean enable_notifications = prefs.getBoolean("enable_notifications", true);
+            if (enable_notifications && measurement.state == LampState.ON && isValidTime()) {
                 log("Mesure inhabituelle dans les heures du soir");
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
                 String emailAddress = prefs.getString("email_address", "default@example.com");
 
                 log("message envoye a " + emailAddress);
