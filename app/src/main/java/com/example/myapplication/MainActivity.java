@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.preference.PreferenceManager;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -88,14 +89,14 @@ public class MainActivity extends AppCompatActivity {
         Switch startAtBoot = findViewById(R.id.startAtBoot);
         startAtBoot.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Log.d("TP1", "start at boot changed to " + isChecked);
-            SharedPreferences prefs = getSharedPreferences("settingsTP1", MODE_PRIVATE);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             SharedPreferences.Editor edit = prefs.edit();
             edit.putBoolean("startOnBoot", isChecked);
             edit.apply();
         });
 
 
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences("settingsTP1", Context.MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean startOnBoot = prefs.getBoolean("startOnBoot", false);
         if (startOnBoot) {
             buttonStart.setChecked(true);
@@ -109,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
-
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 0);
@@ -188,9 +188,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return LampState.UNKNOWN;
     }
-
-
-
 
 
 }
