@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -88,7 +89,7 @@ public class MyService extends Service {
                 callback();
             }
         };
-        timer.schedule(task, 0, 30000);
+        timer.schedule(task, 0, 1000);
         return START_STICKY;
     }
 
@@ -176,8 +177,10 @@ public class MyService extends Service {
         final String lastResult = String.format("%s", mostRecent.value);
 
         Map<String, Measurement> oldMeasurements = measurementsWindow.get(0);
+        Random rand = new Random();
         for (String mote : firstMeasurements.keySet()) {
             Measurement newMeasurement = firstMeasurements.get(mote);
+            newMeasurement.value = rand.nextFloat() * 400;
             calculateLampState(oldMeasurements.get(mote), newMeasurement);
             motesOn.put(mote, newMeasurement);
         }
@@ -217,6 +220,7 @@ public class MyService extends Service {
         log("state:" + measurement.state);
 
         if (old != null && old.state != measurement.state) {
+            log("changed!");
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_on : R.drawable.ic_lamp_off)
                     .setContentTitle("Lamp status changed!")

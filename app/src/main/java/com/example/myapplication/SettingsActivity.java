@@ -4,14 +4,12 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingsActivity extends AppCompatActivity {
-public class SettingsActivity extends AppCompatActivity  {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +32,6 @@ public class SettingsActivity extends AppCompatActivity  {
         finish(); // Termine cette activité pour revenir à l'activité précédente
         return true;
     }
-
-
-
 
 
     // Fragment pour les préférences
