@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Préférence pour activer/désactiver les notifications par email -->
+    <SwitchPreference
+        android:key="enable_notifications"
+        android:title="Activer les notifications"
+        android:summary="Recevoir un mail lorsque la lumière s'allume" />
+
+    <!-- Adresse email -->
+    <EditTextPreference
+        android:key="email_address"
+        android:title="Adresse email"
+        android:summary="Adresse pour recevoir les notifications"
+        android:dialogTitle="Entrez l'adresse email" />
+
+    <!-- Heure de début pour la semaine -->
+    <EditTextPreference
+        android:key="weekday_start_hour"
+        android:title="Heure de début (semaine)"
+        android:summary="Entrez l'heure de début"
+        android:defaultValue="23"
+        android:inputType="time"
+        android:importantForAccessibility="yes"
+        android:hint="23" />
+
+    <EditTextPreference
+        android:key="weekday_end_hour"
+        android:title="Heure de fin (semaine)"
+        android:summary="Entrez l'heure de fin"
+        android:defaultValue="06"
+        android:inputType="time"
+        android:importantForAccessibility="yes"
+        android:hint="06" />
+
+    <EditTextPreference
+        android:key="weekend_start_hour"
+        android:title="Heure de début (week-end)"
+        android:summary="Entrez l'heure de début"
+        android:defaultValue="19"
+        android:inputType="time"
+        android:importantForAccessibility="yes"
+        android:hint="19" />
+
+    <EditTextPreference
+        android:key="weekend_end_hour"
+        android:title="Heure de fin (week-end)"
+        android:summary="Entrez l'heure de fin"
+        android:defaultValue="23"
+        android:inputType="time"
+        android:importantForAccessibility="yes"
+        android:hint="23" />
+
+
+
+
+
+
+
+
+</PreferenceScreen>

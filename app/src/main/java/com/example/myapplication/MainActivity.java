@@ -7,6 +7,7 @@ import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -70,6 +71,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         DataManager.getInstance().addListener(this, this::updateView);
+
+
+        Button settingsButton = findViewById(R.id.action_settings);
+        settingsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
+
     }
 
 

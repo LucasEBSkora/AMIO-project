@@ -2,9 +2,11 @@ package com.example.myapplication;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -82,6 +84,7 @@ public class MyService extends Service {
 
         DataManager.getInstance().updateData(measurements);
 
+
         // Vérifier seulement la mesure la plus récente
         if (!measurements.isEmpty()) {
             Measurement mostRecentMeasurement = measurements.get(measurements.size() - 1);
@@ -90,6 +93,9 @@ public class MyService extends Service {
             if (mostRecentMeasurement.value > 275 && isValidTime()) {
                 Log.d("MyService","Mesure inhabituelle dans les heures du soir");
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String emailAddress = prefs.getString("email_address", "default@example.com");
+
                 // Créez un Intent pour le Broadcast
                 Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
                 broadcastIntent.putExtra("subject", "Alerte : Valeur critique détectée");
@@ -97,7 +103,7 @@ public class MyService extends Service {
                         "Label : " + mostRecentMeasurement.label + "\n" +
                         "Valeur : " + mostRecentMeasurement.value + "\n" +
                         "Heure : " + new Date(mostRecentMeasurement.timestamp));
-                broadcastIntent.putExtra("recipient", "votreadresse@example.com");
+                broadcastIntent.putExtra("recipient", emailAddress);
 
                 // Envoyez l'Intent en Broadcast
                 sendBroadcast(broadcastIntent);
