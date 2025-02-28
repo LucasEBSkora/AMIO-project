@@ -41,7 +41,14 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".SettingsActivity"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".MainActivity">
+            <!-- Compatibilité pour les versions anciennes -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
 
     </application>
 

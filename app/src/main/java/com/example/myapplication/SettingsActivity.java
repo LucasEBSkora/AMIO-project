@@ -1,12 +1,15 @@
 package com.example.myapplication;
 
+
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends AppCompatActivity  {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,7 +18,24 @@ public class SettingsActivity extends PreferenceActivity {
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new SettingsFragment())
                 .commit();
+
+        // Active la flèche de retour
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
     }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        // Gérer l'appui sur la flèche pour revenir en arrière
+        finish(); // Termine cette activité pour revenir à l'activité précédente
+        return true;
+    }
+
+
+
+
 
     // Fragment pour les préférences
     public static class SettingsFragment extends PreferenceFragment {
