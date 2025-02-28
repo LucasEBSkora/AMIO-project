@@ -4,14 +4,12 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -20,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.preference.PreferenceManager;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -124,45 +123,34 @@ public class MyService extends Service {
         // Vérifier seulement la mesure la plus récente
         if (!measurements.isEmpty()) {
             updateData(measurements);
-            Measurement mostRecentMeasurement = measurements.get(measurements.size() - 1);
-
-            // Vérifie si la mesure la plus récente dépasse 275 et si l'heure est valide
-            if (mostRecentMeasurement.value > 275 && isValidTime()) {
-                Log.d("MyService", "Mesure inhabituelle dans les heures du soir");
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                String emailAddress = prefs.getString("email_address", "default@example.com");
-
-                // Créez un Intent pour le Broadcast
-                Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
-                broadcastIntent.putExtra("subject", "Alerte : Valeur critique détectée");
-                broadcastIntent.putExtra("body", "La mesure suivante a dépassé 275 :\n" +
-                        "Label : " + mostRecentMeasurement.label + "\n" +
-                        "Valeur : " + mostRecentMeasurement.value + "\n" +
-                        "Heure : " + new Date(mostRecentMeasurement.timestamp));
-                broadcastIntent.putExtra("recipient", emailAddress);
-
-                // Envoyez l'Intent en Broadcast
-                sendBroadcast(broadcastIntent);
-
-            }
         }
     }
 
     // Vérification de l'heure pour savoir si l'alerte doit être envoyée
     private boolean isValidTime() {
-        // Récupérer l'heure et le jour actuel
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int weekdayStartValue = Integer.parseInt(prefs.getString("weekday_start_hour", "23"));
+        int weekdayEndValue = Integer.parseInt(prefs.getString("weekday_end_hour", "06"));
+
+        int weekendStartValue = Integer.parseInt(prefs.getString("weekend_start_hour", "19"));
+        int weekendEndValue = Integer.parseInt(prefs.getString("weekend_end_hour", "23"));
+
+        log("weekdayStart: " + weekdayStartValue);
+        log("weekdayEndValue: " + weekdayEndValue);
+        log("weekendStartValue: " + weekendStartValue);
+        log("weekendEndValue: " + weekendEndValue);
+
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
         // Si c'est un week-end (samedi ou dimanche) et entre 19h et 23h
         if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
-            return hour >= 19 && hour <= 23;
+            return hour >= weekendStartValue && hour <= weekendEndValue;
         }
 
         // Si c'est un jour de semaine (lundi à vendredi) et entre 23h et 6h
-        return hour >= 23 || hour < 6;
+        return hour >= weekdayStartValue || hour < weekdayEndValue;
     }
 
     private void log(String msg) {
@@ -237,6 +225,26 @@ public class MyService extends Service {
 
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 NotificationManagerCompat.from(this).notify(notificationIndex++, builder.build());
+            }
+
+            if (measurement.value > 275 && isValidTime()) {
+                Log.d("MyService", "Mesure inhabituelle dans les heures du soir");
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String emailAddress = prefs.getString("email_address", "default@example.com");
+
+                // Créez un Intent pour le Broadcast
+                Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
+                broadcastIntent.putExtra("subject", "Alerte : Valeur critique détectée");
+                broadcastIntent.putExtra("body", "La mesure suivante a dépassé 275 :\n" +
+                        "Label : " + measurement.label + "\n" +
+                        "Valeur : " + measurement.value + "\n" +
+                        "Heure : " + new Date(measurement.timestamp));
+                broadcastIntent.putExtra("recipient", emailAddress);
+
+                // Envoyez l'Intent en Broadcast
+                sendBroadcast(broadcastIntent);
+
             }
         }
     }

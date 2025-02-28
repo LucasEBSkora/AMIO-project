@@ -2,27 +2,34 @@ package com.example.myapplication;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 
-public class SettingsActivity extends PreferenceActivity {
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.EditTextPreference;
+import androidx.preference.PreferenceFragmentCompat;
+
+public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Affiche le fragment de préférences
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new SettingsFragment())
                 .commit();
     }
 
     // Fragment pour les préférences
-    public static class SettingsFragment extends PreferenceFragment {
+    public static class SettingsFragment extends PreferenceFragmentCompat {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+        }
+
+        @Override
+        public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
             // Charge le fichier XML de préférences
+
             addPreferencesFromResource(R.xml.preferences);
 
             // Récupère les préférences
