@@ -222,7 +222,7 @@ public class MyService extends Service {
 
         if (old != null && old.state != measurement.state) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_on : R.drawable.ic_lamp_off)
+                    .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_off : R.drawable.ic_lamp_on)
                     .setContentTitle("Lamp status changed!")
                     .setContentText("lamp at " + measurement.mote + " turned " + measurement.state)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
@@ -243,13 +243,11 @@ public class MyService extends Service {
                 Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
                 emailIntent.setData(Uri.parse("mailto:"));
                 emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddress});
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Alerte : Valeur critique détectée");
-                emailIntent.putExtra(Intent.EXTRA_TEXT, "La mesure suivante a dépassé 275 :\n" +
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Alert : Lamp turned on outside of business hours");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, "The following measurement was taken :\n" +
                         "Label : " + measurement.label + "\n" +
-                        "Valeur : " + measurement.value + "\n" +
-                        "Heure : " + new Date(measurement.timestamp));
-
-                // Envoyez l'Intent en Broadcast
+                        "value : " + measurement.value + "\n" +
+                        "time : " + new Date(measurement.timestamp));
 
                 emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 try {

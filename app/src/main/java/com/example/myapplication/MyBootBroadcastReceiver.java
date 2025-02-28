@@ -12,10 +12,9 @@ public class MyBootBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Log.d("Broadcast receiver", "received:" + intent.getAction());
+        Log.d("AMIO-Project", "received:" + intent.getAction());
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean startOnBoot = prefs.getBoolean("startOnBoot", false);
-        Log.d("TP1", "start on boot=" + startOnBoot);
         if (startOnBoot) {
             context.startService(new Intent(context, MyService.class));
         }

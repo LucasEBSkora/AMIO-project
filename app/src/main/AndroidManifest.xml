@@ -35,12 +35,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.example.myapplication.EmailBroadcastReceiver" android:enabled="true" android:exported="false">
-            <intent-filter>
-                <action android:name="com.example.myapplication.SEND_EMAIL" />
-            </intent-filter>
-        </receiver>
-
         <activity android:name=".SettingsActivity"
             android:theme="@style/AppTheme"
             android:parentActivityName=".MainActivity">
