@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -27,6 +28,11 @@ import java.util.Map;
 import java.util.Optional;
 
 public class MainActivity extends AppCompatActivity {
+    private final Map<String, LampState> motesOn;
+
+    public MainActivity() {
+        motesOn = new HashMap<>();
+    }
     private static final String TAG = "TP1";
 
     final private BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -88,12 +94,20 @@ public class MainActivity extends AppCompatActivity {
             edit.apply();
         });
 
-        DataManager.getInstance().addListener(this, this::updateView);
+
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("settingsTP1", Context.MODE_PRIVATE);
+        boolean startOnBoot = prefs.getBoolean("startOnBoot", false);
+        if (startOnBoot) {
+            buttonStart.setChecked(true);
+            TextView view2 = findViewById(R.id.textView2);
+            view2.setText("Running!");
+            startAtBoot.setChecked(true);
+        }
+
     }
 
     @Override
     protected void onDestroy() {
-        DataManager.getInstance().removeListener(this);
         super.onDestroy();
     }
 

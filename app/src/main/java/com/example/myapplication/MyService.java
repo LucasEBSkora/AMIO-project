@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -25,7 +24,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +38,7 @@ public class MyService extends Service {
     Timer timer;
     SlidingWindow measurementsWindow;
     Handler handler;
-    Map<String, LampState> motesOn;
+    Map<String, Measurement> motesOn;
 
     @Override
     public void onCreate() {
@@ -117,16 +115,14 @@ public class MyService extends Service {
             log("IO Exception: " + e.getMessage());
             return;
         }
-
-        DataManager.getInstance().updateData(measurements);
-
         // Vérifier seulement la mesure la plus récente
         if (!measurements.isEmpty()) {
+            updateData(measurements);
             Measurement mostRecentMeasurement = measurements.get(measurements.size() - 1);
 
             // Vérifie si la mesure la plus récente dépasse 275 et si l'heure est valide
             if (mostRecentMeasurement.value > 275 && isValidTime()) {
-                Log.d("MyService","Mesure inhabituelle dans les heures du soir");
+                log("Mesure inhabituelle dans les heures du soir");
 
                 // Créez un Intent pour le Broadcast
                 Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
@@ -135,7 +131,7 @@ public class MyService extends Service {
                         "Label : " + mostRecentMeasurement.label + "\n" +
                         "Valeur : " + mostRecentMeasurement.value + "\n" +
                         "Heure : " + new Date(mostRecentMeasurement.timestamp));
-                broadcastIntent.putExtra("recipient", "votreadresse@example.com");
+                broadcastIntent.putExtra("recipient", "skora.lucas@gmail.com");
 
                 // Envoyez l'Intent en Broadcast
                 sendBroadcast(broadcastIntent);
@@ -184,12 +180,16 @@ public class MyService extends Service {
 
         Map<String, Measurement> oldMeasurements = measurementsWindow.get(0);
         for (String mote : firstMeasurements.keySet()) {
-            motesOn.put(mote, getLampState(oldMeasurements.get(mote), firstMeasurements.get(mote)));
+            Measurement newMeasurement = firstMeasurements.get(mote);
+            calculateLampState(oldMeasurements.get(mote), newMeasurement);
+            motesOn.put(mote, newMeasurement);
         }
 
         StringBuilder measurementsStringBuilder = new StringBuilder();
         for (String mote : motesOn.keySet()) {
-            measurementsStringBuilder.append(mote).append(": ").append(motesOn.get(mote)).append('\n');
+            Measurement measurement = motesOn.get(mote);
+            if (measurement == null) continue;
+            measurementsStringBuilder.append(mote).append(" is ").append(measurement.state).append(" value: ").append(measurement.value).append('\n');
         }
 
         Intent updateIntent = new Intent(NEW_DATA);
@@ -200,7 +200,7 @@ public class MyService extends Service {
     }
 
     @NonNull
-    private LampState getLampState(Measurement old, Measurement measurement) {
+    private void calculateLampState(Measurement old, Measurement measurement) {
         double delta = 0;
         if (old != null) {
             delta = measurement.value - old.value;
@@ -210,13 +210,14 @@ public class MyService extends Service {
             measurement.state = LampState.ON;
         } else if (delta < -50) {
             measurement.state = LampState.OFF;
-        } else if (old != null && old.state != LampState.UNKNOWN) {
+        } else if (old != null && old.state != null && old.state != LampState.UNKNOWN) {
             measurement.state = old.state;
         } else if (measurement.value < 150) {
             measurement.state = LampState.OFF;
         } else {
             measurement.state = LampState.ON;
         }
+        log("state:" + measurement.state);
 
         if (old != null && old.state != measurement.state) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -229,7 +230,5 @@ public class MyService extends Service {
                 NotificationManagerCompat.from(this).notify(0, builder.build());
             }
         }
-
-        return measurement.state;
     }
 }
