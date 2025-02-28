@@ -240,8 +240,8 @@ public class MyService extends Service {
                 log("message envoye a " + emailAddress);
 
                 // Créez un Intent pour le Broadcast
-                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                emailIntent.setDataAndType(Uri.parse("mailto:"), "text/plain");
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:"));
                 emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddress});
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Alerte : Valeur critique détectée");
                 emailIntent.putExtra(Intent.EXTRA_TEXT, "La mesure suivante a dépassé 275 :\n" +
@@ -250,8 +250,14 @@ public class MyService extends Service {
                         "Heure : " + new Date(measurement.timestamp));
 
                 // Envoyez l'Intent en Broadcast
+
                 emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(Intent.createChooser(emailIntent, "Choisir client e-mail:"));
+                try {
+                    startActivity(emailIntent);
+                    log("Email sent!");
+                } catch (android.content.ActivityNotFoundException ex) {
+                    log("Email not installed.");
+                }
 
             }
         }
