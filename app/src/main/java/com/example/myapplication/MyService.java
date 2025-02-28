@@ -7,8 +7,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -115,6 +118,7 @@ public class MyService extends Service {
             log("IO Exception: " + e.getMessage());
             return;
         }
+
         // Vérifier seulement la mesure la plus récente
         if (!measurements.isEmpty()) {
             updateData(measurements);
@@ -122,7 +126,10 @@ public class MyService extends Service {
 
             // Vérifie si la mesure la plus récente dépasse 275 et si l'heure est valide
             if (mostRecentMeasurement.value > 275 && isValidTime()) {
-                log("Mesure inhabituelle dans les heures du soir");
+                Log.d("MyService","Mesure inhabituelle dans les heures du soir");
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String emailAddress = prefs.getString("email_address", "default@example.com");
 
                 // Créez un Intent pour le Broadcast
                 Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
@@ -131,7 +138,7 @@ public class MyService extends Service {
                         "Label : " + mostRecentMeasurement.label + "\n" +
                         "Valeur : " + mostRecentMeasurement.value + "\n" +
                         "Heure : " + new Date(mostRecentMeasurement.timestamp));
-                broadcastIntent.putExtra("recipient", "skora.lucas@gmail.com");
+                broadcastIntent.putExtra("recipient", emailAddress);
 
                 // Envoyez l'Intent en Broadcast
                 sendBroadcast(broadcastIntent);
