@@ -34,10 +34,16 @@ Le bouton "action_setting" ouvre le volet des paramètres de l'application.
 
 ### Surveillance en temps réel
 
+L'application est capable de se communiquer avec le serveur IoT pour prendre des mesures des capteurs dans le réseau. Chaque seconde, le service fait une demande GET dans l'endpoint `http://iotlab.telecomnancy.eu:8080/iotlab/rest/data/1/light1/last`, qui envoie toutes les mesures en JSON. Pour chaque capteur, on affiche son label, sa valeur et son statut : ON ou OFF. Nous avons décidé qu'un capteur commence en ON si sa valeur est plus forte que 275 et en OFF dans le cas contraire, et pour les mesures suivantes, il change en ON si la différence entre la mesure la plus récente et la dernière est plus grande que 50, et en OFF si le changement est plus petit que -50.
+
 ### Notification
 
+Chaque fois qu'une lampe s'allume/se désallume, une notification est envoyée à l'utilisateur. Cette notification affiche le label de la lampe et si elle est changée à ON ou à OFF. L'icône de l'application change aussi selon le statut de la lampe.
+
+<img src="Image/Notifications.png" alt="Texte alternatif" width="300">
+
 ### Envoi de mail
-À chaque nouvelle mesure récupérée, l'application va tester sa valeur et sa date. Si la valeur est supérieur à 275 et si la date est dans les heures où l'envoi de mail doit se faire (cf paramètres personnalisables) alors le service va créer un Intent du type "SEND_EMAIL".
+À chaque nouvelle mesure récupérée, l'application va tester sa valeur et sa date. Si la lampe est à ON et si la date est dans les heures où l'envoi de mail doit se faire (cf paramètres personnalisables) alors le service va créer un Intent du type "SEND_EMAIL".
 
 L'objet et le corps du mail sont déjà prédéfinis respectivement par "Alerte : Valeur critique détectée" et "La mesure suivante a dépassé 275 : ... " avec son label, sa valeur et son heure. L'adresse d'envoi dépendra des paramètres personnalisables.
 
