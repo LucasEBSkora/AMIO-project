@@ -35,7 +35,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".EmailBroadcastReceiver" android:enabled="true" android:exported="false">
+        <receiver android:name="com.example.myapplication.EmailBroadcastReceiver" android:enabled="true" android:exported="false">
             <intent-filter>
                 <action android:name="com.example.myapplication.SEND_EMAIL" />
             </intent-filter>

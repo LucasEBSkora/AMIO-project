@@ -8,12 +8,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -95,7 +95,7 @@ public class MyService extends Service {
 
     private void callback() {
 
-        URL url = null;
+        URL url;
         try {
             url = new URL(getResources().getString(R.string.serverURL));
         } catch (MalformedURLException e) {
@@ -144,7 +144,8 @@ public class MyService extends Service {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-
+        log("hour: " + hour);
+        log("day of week: " + dayOfWeek);
         // Si c'est un week-end (samedi ou dimanche) et entre 19h et 23h
         if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
             return hour >= weekendStartValue && hour <= weekendEndValue;
@@ -155,7 +156,7 @@ public class MyService extends Service {
     }
 
     private void log(String msg) {
-        Log.d("TP1", msg);
+        Log.d("AMIO-Project", msg);
     }
 
     public void updateData(List<Measurement> measurements) {
@@ -180,6 +181,7 @@ public class MyService extends Service {
         Random rand = new Random();
         for (String mote : firstMeasurements.keySet()) {
             Measurement newMeasurement = firstMeasurements.get(mote);
+            if (newMeasurement == null) continue;
             newMeasurement.value = rand.nextFloat() * 400;
             calculateLampState(oldMeasurements.get(mote), newMeasurement);
             motesOn.put(mote, newMeasurement);
@@ -199,7 +201,6 @@ public class MyService extends Service {
         sendBroadcast(updateIntent);
     }
 
-    @NonNull
     private void calculateLampState(Measurement old, Measurement measurement) {
         double delta = 0;
         if (old != null) {
@@ -212,7 +213,7 @@ public class MyService extends Service {
             measurement.state = LampState.OFF;
         } else if (old != null && old.state != null && old.state != LampState.UNKNOWN) {
             measurement.state = old.state;
-        } else if (measurement.value < 150) {
+        } else if (measurement.value < 275) {
             measurement.state = LampState.OFF;
         } else {
             measurement.state = LampState.ON;
@@ -220,7 +221,6 @@ public class MyService extends Service {
         log("state:" + measurement.state);
 
         if (old != null && old.state != measurement.state) {
-            log("changed!");
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_on : R.drawable.ic_lamp_off)
                     .setContentTitle("Lamp status changed!")
@@ -231,23 +231,27 @@ public class MyService extends Service {
                 NotificationManagerCompat.from(this).notify(notificationIndex++, builder.build());
             }
 
-            if (measurement.value > 275 && isValidTime()) {
-                Log.d("MyService", "Mesure inhabituelle dans les heures du soir");
+            if (measurement.state == LampState.ON && isValidTime()) {
+                log("Mesure inhabituelle dans les heures du soir");
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 String emailAddress = prefs.getString("email_address", "default@example.com");
 
+                log("message envoye a " + emailAddress);
+
                 // Créez un Intent pour le Broadcast
-                Intent broadcastIntent = new Intent("com.example.myapplication.SEND_EMAIL");
-                broadcastIntent.putExtra("subject", "Alerte : Valeur critique détectée");
-                broadcastIntent.putExtra("body", "La mesure suivante a dépassé 275 :\n" +
+                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                emailIntent.setDataAndType(Uri.parse("mailto:"), "text/plain");
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddress});
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Alerte : Valeur critique détectée");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, "La mesure suivante a dépassé 275 :\n" +
                         "Label : " + measurement.label + "\n" +
                         "Valeur : " + measurement.value + "\n" +
                         "Heure : " + new Date(measurement.timestamp));
-                broadcastIntent.putExtra("recipient", emailAddress);
 
                 // Envoyez l'Intent en Broadcast
-                sendBroadcast(broadcastIntent);
+                emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(Intent.createChooser(emailIntent, "Choisir client e-mail:"));
 
             }
         }
