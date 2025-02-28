@@ -5,9 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -18,24 +18,19 @@ import android.widget.ToggleButton;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class MainActivity extends AppCompatActivity {
-    private final Map<String, LampState> motesOn;
-
-    public MainActivity() {
-        motesOn = new HashMap<>();
-    }
     private static final String TAG = "TP1";
-
+    private final Map<String, LampState> motesOn;
     final private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -56,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
             measurementsView.setText(StringMotesOn);
         }
     };
+
+    public MainActivity() {
+        motesOn = new HashMap<>();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +111,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 0);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override

@@ -43,6 +43,8 @@ public class MyService extends Service {
     Handler handler;
     Map<String, Measurement> motesOn;
 
+    int notificationIndex = 0;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -126,7 +128,7 @@ public class MyService extends Service {
 
             // Vérifie si la mesure la plus récente dépasse 275 et si l'heure est valide
             if (mostRecentMeasurement.value > 275 && isValidTime()) {
-                Log.d("MyService","Mesure inhabituelle dans les heures du soir");
+                Log.d("MyService", "Mesure inhabituelle dans les heures du soir");
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 String emailAddress = prefs.getString("email_address", "default@example.com");
@@ -234,7 +236,7 @@ public class MyService extends Service {
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                NotificationManagerCompat.from(this).notify(0, builder.build());
+                NotificationManagerCompat.from(this).notify(notificationIndex++, builder.build());
             }
         }
     }
