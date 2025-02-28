@@ -8,6 +8,8 @@ public class Measurement {
     public double value;
     public String mote;
 
+    public LampState state;
+
     public Measurement() {
 
     }
@@ -17,6 +19,7 @@ public class Measurement {
         this.label = label;
         this.value = value;
         this.mote = mote;
+        this.state = LampState.UNKNOWN;
     }
 
     @NonNull
@@ -27,6 +30,7 @@ public class Measurement {
                 ", label='" + label + '\'' +
                 ", value=" + value +
                 ", mote='" + mote + '\'' +
+                ", state='" + state + '\'' +
                 '}';
     }
 }

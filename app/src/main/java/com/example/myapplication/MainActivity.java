@@ -1,6 +1,9 @@
 package com.example.myapplication;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
@@ -25,14 +28,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-enum LampState {ON, OFF, UNKNOWN}
-
 public class MainActivity extends AppCompatActivity {
     private final Map<String, LampState> motesOn;
 
     public MainActivity() {
         motesOn = new HashMap<>();
     }
+    private static final String TAG = "TP1";
+
+    final private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "broadcast received: " + intent.getAction());
+            if (!MyService.NEW_DATA.equals(intent.getAction())) {
+                return;
+            }
+            final String resultString = intent.getStringExtra("result");
+            TextView lastResultTextView = findViewById(R.id.textView4);
+            lastResultTextView.setText(resultString);
+
+            final String dateString = intent.getStringExtra("date");
+            TextView timeLastResultTextView = findViewById(R.id.textView6);
+            timeLastResultTextView.setText(dateString);
+
+            final String StringMotesOn = intent.getStringExtra("motesOn");
+            TextView measurementsView = findViewById(R.id.textView7);
+            measurementsView.setText(StringMotesOn);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
             return insets;
         });
-        Log.d("TP1", "Création de l'activité");
+
+        IntentFilter filter = new IntentFilter(MyService.NEW_DATA);
+        registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
 
         ToggleButton buttonStart = findViewById(R.id.buttonStart);
         buttonStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -70,8 +95,15 @@ public class MainActivity extends AppCompatActivity {
             edit.apply();
         });
 
-        DataManager.getInstance().addListener(this, this::updateView);
 
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("settingsTP1", Context.MODE_PRIVATE);
+        boolean startOnBoot = prefs.getBoolean("startOnBoot", false);
+        if (startOnBoot) {
+            buttonStart.setChecked(true);
+            TextView view2 = findViewById(R.id.textView2);
+            view2.setText("Running!");
+            startAtBoot.setChecked(true);
+        }
 
         Button settingsButton = findViewById(R.id.action_settings);
         settingsButton.setOnClickListener(v -> {
@@ -79,12 +111,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-    }
 
+    }
 
     @Override
     protected void onDestroy() {
-        DataManager.getInstance().removeListener(this);
         super.onDestroy();
     }
 

@@ -1,7 +1,12 @@
 package com.example.myapplication;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.icu.text.DateFormat;
+import android.icu.text.SimpleDateFormat;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Handler;
@@ -10,7 +15,11 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -18,20 +27,42 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MyService extends Service {
+
+    public static final String NEW_DATA = "com.example.myapplication.myservice.NEW_DATA";
+    final String CHANNEL_ID = "lampStatus";
     Timer timer;
+    SlidingWindow measurementsWindow;
     Handler handler;
+    Map<String, Measurement> motesOn;
 
     @Override
     public void onCreate() {
         super.onCreate();
         timer = new Timer();
         handler = new Handler();
+        measurementsWindow = new SlidingWindow(2);
+        motesOn = new HashMap<>();
         log("Service Created!");
+
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is not in the Support Library.
+        CharSequence name = getString(R.string.channel_name);
+        String description = getString(R.string.channel_description);
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        channel.setDescription(description);
+        // Register the channel with the system. You can't change the importance
+        // or other notification behaviors after this.
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 
     @Override
@@ -39,6 +70,12 @@ public class MyService extends Service {
         super.onDestroy();
         timer.cancel();
         log("Service stopped!");
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -82,11 +119,9 @@ public class MyService extends Service {
             return;
         }
 
-        DataManager.getInstance().updateData(measurements);
-
-
         // Vérifier seulement la mesure la plus récente
         if (!measurements.isEmpty()) {
+            updateData(measurements);
             Measurement mostRecentMeasurement = measurements.get(measurements.size() - 1);
 
             // Vérifie si la mesure la plus récente dépasse 275 et si l'heure est valide
@@ -132,10 +167,75 @@ public class MyService extends Service {
         Log.d("TP1", msg);
     }
 
+    public void updateData(List<Measurement> measurements) {
+        measurementsWindow.addMeasurements(measurements);
+        if (!measurementsWindow.windowFull()) return;
+        Map<String, Measurement> firstMeasurements = measurementsWindow.getMostRecent();
+        if (firstMeasurements == null || firstMeasurements.isEmpty())
+            return;
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+        Optional<Measurement> mostRecentOpt = firstMeasurements.values().stream().reduce((a, b) -> a.timestamp > b.timestamp ? a : b);
+
+        if (mostRecentOpt.isEmpty()) {
+            return;
+        }
+        Measurement mostRecent = mostRecentOpt.get();
+
+        DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+        final String dateString = formatter.format(new Date(mostRecent.timestamp));
+        final String lastResult = String.format("%s", mostRecent.value);
+
+        Map<String, Measurement> oldMeasurements = measurementsWindow.get(0);
+        for (String mote : firstMeasurements.keySet()) {
+            Measurement newMeasurement = firstMeasurements.get(mote);
+            calculateLampState(oldMeasurements.get(mote), newMeasurement);
+            motesOn.put(mote, newMeasurement);
+        }
+
+        StringBuilder measurementsStringBuilder = new StringBuilder();
+        for (String mote : motesOn.keySet()) {
+            Measurement measurement = motesOn.get(mote);
+            if (measurement == null) continue;
+            measurementsStringBuilder.append(mote).append(" is ").append(measurement.state).append(" value: ").append(measurement.value).append('\n');
+        }
+
+        Intent updateIntent = new Intent(NEW_DATA);
+        updateIntent.putExtra("result", lastResult);
+        updateIntent.putExtra("date", dateString);
+        updateIntent.putExtra("motesOn", measurementsStringBuilder.toString());
+        sendBroadcast(updateIntent);
+    }
+
+    @NonNull
+    private void calculateLampState(Measurement old, Measurement measurement) {
+        double delta = 0;
+        if (old != null) {
+            delta = measurement.value - old.value;
+        }
+
+        if (delta > 50) {
+            measurement.state = LampState.ON;
+        } else if (delta < -50) {
+            measurement.state = LampState.OFF;
+        } else if (old != null && old.state != null && old.state != LampState.UNKNOWN) {
+            measurement.state = old.state;
+        } else if (measurement.value < 150) {
+            measurement.state = LampState.OFF;
+        } else {
+            measurement.state = LampState.ON;
+        }
+        log("state:" + measurement.state);
+
+        if (old != null && old.state != measurement.state) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(measurement.state == LampState.ON ? R.drawable.ic_lamp_on : R.drawable.ic_lamp_off)
+                    .setContentTitle("Lamp status changed!")
+                    .setContentText("lamp at " + measurement.mote + " turned " + measurement.state)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                NotificationManagerCompat.from(this).notify(0, builder.build());
+            }
+        }
     }
 }

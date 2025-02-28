@@ -10,6 +10,9 @@
     <string name="serverURL">http://iotlab.telecomnancy.eu:8080/iotlab/rest/data/1/light1/last</string>
     <string name="lastMeasurement">Last Measurement:</string>
     <string name="timeLastMeasurement">Time of Last Measurement</string>
+    <string name="channel_name">Lamp status</string>
+    <string name="channel_description">Notifications for lamp status changes</string>
+
 
 
     <!-- Liste des heures visibles dans les menus déroulants -->
